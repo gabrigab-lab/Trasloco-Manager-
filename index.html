@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Trasloco">
+<meta name="theme-color" content="#f7f6f3">
+<title>Trasloco Manager</title>
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f7f6f3; --surface: #fff; --surface2: #f0eeea;
+  --border: rgba(0,0,0,0.07); --border2: rgba(0,0,0,0.13);
+  --text: #1a1a1a; --text2: #6b6b6b; --text3: #b8b7b0;
+  --accent: #5b6cf0; --radius: 18px; --radius-sm: 12px;
+  --safe-top: env(safe-area-inset-top, 44px);
+  --safe-bottom: env(safe-area-inset-bottom, 20px);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; background: #e8e6e1; font-family: 'Nunito', sans-serif; overflow: hidden; display: flex; justify-content: center; }
+#app { max-width: 560px; width: 100%; background: var(--bg); box-shadow: 0 0 60px rgba(0,0,0,0.15); height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+
+.topbar { display: flex; align-items: flex-start; gap: 10px; padding: calc(var(--safe-top) + 10px) 20px 14px; background: var(--bg); flex-shrink: 0; border-bottom: 1px solid var(--border); }
+.topbar-title { font-size: 18px; font-weight: 900; color: var(--text); word-break: break-word; }
+.topbar-sub { font-size: 11px; color: var(--text3); font-weight: 600; margin-top: 1px; }
+.back-btn { width: 38px; height: 38px; border-radius: 50%; margin-top: 2px; background: var(--surface); border: 1px solid var(--border2); color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 22px; flex-shrink: 0; font-weight: 700; -webkit-appearance: none; }
+.icon-btn { width: 36px; height: 36px; border-radius: 50%; margin-top: 2px; background: var(--accent); border: none; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; flex-shrink: 0; }
+
+.scroll-area { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding: 16px 20px calc(var(--safe-bottom) + 24px); }
+
+/* HOME */
+.home-strip { display: flex; gap: 8px; margin-bottom: 16px; }
+.home-chip { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 6px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+.home-chip-num { font-size: 18px; font-weight: 900; color: var(--text); }
+.home-chip-label { font-size: 8px; color: var(--text3); font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 1px; }
+.cat-list { display: flex; flex-direction: column; gap: 10px; }
+.cat-card { background: var(--surface); border-radius: var(--radius); padding: 16px; display: flex; align-items: center; gap: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.07); border: 1px solid var(--border); cursor: pointer; width: 100%; text-align: left; -webkit-appearance: none; transition: transform 0.15s; }
+.cat-card:active { transform: scale(0.99); }
+.cat-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; }
+.cat-body { flex: 1; min-width: 0; }
+.cat-name { font-size: 15px; font-weight: 900; color: var(--text); }
+.cat-meta { font-size: 11px; color: var(--text3); font-weight: 600; margin-top: 2px; }
+.cat-prog { height: 3px; border-radius: 2px; margin-top: 6px; overflow: hidden; background: var(--surface2); }
+.cat-progf { height: 100%; border-radius: 2px; }
+.cat-chev { color: var(--text3); font-size: 20px; font-weight: 700; flex-shrink: 0; }
+
+/* ROOMS */
+.rooms-list { display: flex; flex-direction: column; gap: 8px; }
+.summary-strip { display: flex; gap: 10px; margin-bottom: 20px; }
+.chip { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 8px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+.chip-num { font-size: 20px; font-weight: 900; color: var(--text); }
+.chip-label { font-size: 9px; color: var(--text3); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 1px; }
+.room-row { background: var(--surface); border-radius: var(--radius); padding: 14px 16px; display: flex; align-items: center; gap: 14px; cursor: pointer; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.08); -webkit-appearance: none; width: 100%; text-align: left; transition: transform 0.15s; position: relative; }
+.room-row:active { transform: scale(0.99); }
+.room-circle { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+.room-info { flex: 1; min-width: 0; }
+.room-name { font-size: 15px; font-weight: 800; color: var(--text); }
+.room-meta { font-size: 12px; color: var(--text3); font-weight: 600; margin-top: 2px; }
+.room-prog { height: 3px; border-radius: 2px; margin-top: 6px; overflow: hidden; background: var(--surface2); }
+.room-progf { height: 100%; border-radius: 2px; transition: width 0.4s; }
+.room-chevron { color: var(--text3); font-size: 20px; font-weight: 700; flex-shrink: 0; }
+.room-edit { position: absolute; top: 10px; right: 42px; width: 28px; height: 28px; border-radius: 50%; background: var(--surface2); border: none; color: var(--text3); font-size: 13px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; }
+.add-room-btn { background: transparent; border: 1.5px dashed var(--border2); border-radius: var(--radius); padding: 16px; color: var(--text3); font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 4px; }
+.add-room-btn:active { border-color: var(--accent); color: var(--accent); }
+
+/* BOXES */
+.boxes-list { display: flex; flex-direction: column; gap: 8px; }
+.box-row { background: var(--surface); border-radius: var(--radius); padding: 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; border: 1px solid var(--border); border-left: 4px solid transparent; box-shadow: 0 2px 8px rgba(0,0,0,0.08); -webkit-appearance: none; width: 100%; text-align: left; transition: transform 0.15s; }
+.box-row:active { transform: scale(0.99); }
+.box-row.s-da_fare { border-left-color: #d1d5db; }
+.box-row.s-in_corso { border-left-color: #f59e0b; }
+.box-row.s-pronta { border-left-color: #10b981; }
+.box-row.s-consegnata { border-left-color: var(--accent); }
+.box-num { width: 40px; height: 40px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 13px; flex-shrink: 0; }
+.box-body { flex: 1; min-width: 0; }
+.box-name { font-size: 14px; font-weight: 800; color: var(--text); white-space: normal; word-break: break-word; line-height: 1.3; }
+.box-desc { font-size: 12px; color: var(--text3); font-weight: 600; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.box-tags { display: flex; gap: 5px; margin-top: 5px; flex-wrap: wrap; }
+.tag { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.box-chevron { color: var(--text3); font-size: 20px; font-weight: 700; flex-shrink: 0; }
+.add-box-btn { background: var(--accent); border: none; border-radius: var(--radius); padding: 16px; color: #fff; font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 4px; }
+
+/* EMPTY STATE */
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; gap: 12px; }
+.empty-icon { font-size: 52px; }
+.empty-title { font-size: 17px; font-weight: 900; color: var(--text); }
+.empty-sub { font-size: 13px; color: var(--text3); font-weight: 600; line-height: 1.5; }
+
+/* ITEMS (quadri/arredi/complementi) */
+.items-list { display: flex; flex-direction: column; gap: 10px; }
+.item-card { background: var(--surface); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+.item-card-inner { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
+.item-photo { width: 56px; height: 56px; border-radius: var(--radius-sm); object-fit: cover; flex-shrink: 0; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 22px; overflow: hidden; }
+.item-photo img { width: 100%; height: 100%; object-fit: cover; }
+.item-body { flex: 1; min-width: 0; }
+.item-name { font-size: 14px; font-weight: 800; color: var(--text); }
+.item-count { font-size: 11px; color: var(--text3); font-weight: 600; margin-top: 2px; }
+.item-actions { display: flex; gap: 6px; padding: 0 14px 12px; }
+.item-action-btn { border-radius: 8px; padding: 5px 12px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: 'Nunito', sans-serif; -webkit-appearance: none; }
+.add-item-btn { background: var(--accent); border: none; border-radius: var(--radius); padding: 16px; color: #fff; font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 4px; }
+
+/* DETAIL FORM */
+.detail-form { display: flex; flex-direction: column; gap: 16px; }
+.field-group { display: flex; flex-direction: column; gap: 6px; }
+.field-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700; }
+.field-input { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 13px 14px; font-size: 15px; font-family: 'Nunito', sans-serif; font-weight: 600; color: var(--text); width: 100%; -webkit-appearance: none; }
+.field-input:focus { outline: none; border-color: var(--accent); }
+textarea.field-input { min-height: 80px; max-height: 120px; resize: none; line-height: 1.5; overflow-y: auto; }
+.status-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; }
+.status-btn { border: 1.5px solid var(--border2); border-radius: var(--radius-sm); padding: 10px 8px; text-align: center; cursor: pointer; font-size: 12px; font-weight: 700; color: var(--text2); background: var(--surface); font-family: 'Nunito', sans-serif; -webkit-appearance: none; }
+.status-btn.active { border-color: var(--accent); background: rgba(91,108,240,0.08); color: var(--accent); }
+.status-emoji { font-size: 20px; display: block; margin-bottom: 3px; }
+.photos-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+.photo-wrap { position: relative; border-radius: var(--radius-sm); overflow: hidden; aspect-ratio: 1; background: var(--surface2); }
+.photo-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo-del { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 50%; background: rgba(0,0,0,0.55); border: none; color: #fff; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.photo-add-btn { aspect-ratio: 1; border: 1.5px dashed var(--border2); border-radius: var(--radius-sm); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; cursor: pointer; color: var(--text3); font-size: 11px; font-weight: 700; background: transparent; font-family: 'Nunito', sans-serif; -webkit-appearance: none; }
+.save-btn { background: var(--accent); border: none; border-radius: var(--radius); padding: 16px; color: #fff; font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 900; cursor: pointer; width: 100%; }
+.del-btn { background: transparent; border: 1.5px solid rgba(239,68,68,0.3); border-radius: var(--radius); padding: 13px; color: #ef4444; font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; }
+
+/* MODAL */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: flex; align-items: flex-end; z-index: 100; backdrop-filter: blur(8px); animation: fadeIn 0.2s; }
+.modal-sheet { background: var(--bg); border-radius: 28px 28px 0 0; padding: 20px 20px calc(var(--safe-bottom) + 20px); width: 100%; max-height: 88vh; overflow-y: auto; animation: slideUp 0.25s ease; }
+.modal-handle { width: 36px; height: 4px; background: var(--border2); border-radius: 2px; margin: 0 auto 18px; }
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.modal-title { font-size: 18px; font-weight: 900; color: var(--text); }
+.modal-close { background: var(--surface2); border: none; width: 30px; height: 30px; border-radius: 50%; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text2); }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+
+.color-presets { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.color-preset { width: 34px; height: 34px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: transform 0.15s, border-color 0.15s; }
+.color-preset.selected { border-color: var(--text); transform: scale(1.1); }
+.color-custom-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.color-custom-label { font-size: 12px; font-weight: 700; color: var(--text2); }
+input[type="color"] { width: 40px; height: 34px; border: 1px solid var(--border2); border-radius: var(--radius-sm); cursor: pointer; padding: 2px; background: var(--surface); -webkit-appearance: none; }
+.icon-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: 8px; margin-top: 4px; }
+.icon-opt { aspect-ratio: 1; border: 1.5px solid var(--border); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; background: var(--surface); -webkit-appearance: none; }
+.icon-opt.selected { border-color: var(--accent); background: rgba(91,108,240,0.08); }
+
+.toast { position: fixed; bottom: calc(var(--safe-bottom) + 16px); left: 50%; transform: translateX(-50%) translateY(16px); background: var(--text); color: var(--bg); padding: 10px 22px; border-radius: 30px; font-size: 13px; font-weight: 700; z-index: 200; opacity: 0; transition: all 0.2s; white-space: nowrap; pointer-events: none; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.loading { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; z-index: 300; }
+.spinner { width: 28px; height: 28px; border: 3px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to{transform:rotate(360deg)} }
+.sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; display: inline-block; margin-left: 6px; vertical-align: middle; }
+.sync-dot.syncing { background: #f59e0b; animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+</style>
+</head>
+<body>
+<div id="app">
+
+<div id="loading" class="loading">
+  <div style="font-size:40px">📦</div>
+  <div style="font-size:15px;font-weight:800;color:var(--text2)">Trasloco Manager</div>
+  <div class="spinner"></div>
+</div>
+
+<div id="main-app" style="display:none;flex-direction:column;height:100%">
+
+  <!-- HOME -->
+  <div id="view-home" style="display:none;flex-direction:column;height:100%">
+    <div class="topbar">
+      <div style="flex:1;min-width:0">
+        <div class="topbar-title">📦 Trasloco <span class="sync-dot" id="sync-dot"></span></div>
+        <div class="topbar-sub">Novara → nuova casa</div>
+      </div>
+      <button class="back-btn" onclick="generateShareLink()" style="background:var(--surface2)" title="Condividi">🔗</button>
+    </div>
+    <div class="scroll-area">
+      <div class="home-strip" id="home-strip"></div>
+      <div class="cat-list" id="cat-list"></div>
+    </div>
+  </div>
+
+  <!-- ROOMS -->
+  <div id="view-rooms" style="display:none;flex-direction:column;height:100%">
+    <div class="topbar">
+      <button class="back-btn" onclick="navigate('home')">‹</button>
+      <div style="flex:1;min-width:0;margin:0 8px">
+        <div class="topbar-title">📦 Stanze</div>
+      </div>
+      <button class="icon-btn" onclick="showRoomModal()">+</button>
+    </div>
+    <div class="scroll-area">
+      <div class="summary-strip" id="summary-strip"></div>
+      <div class="rooms-list" id="rooms-list"></div>
+    </div>
+  </div>
+
+  <!-- BOXES -->
+  <div id="view-boxes" style="display:none;flex-direction:column;height:100%">
+    <div class="topbar">
+      <button class="back-btn" onclick="navigate('rooms')">‹</button>
+      <div style="flex:1;min-width:0;margin:0 8px">
+        <div class="topbar-title" id="boxes-title" style="white-space:normal;word-break:break-word;line-height:1.25"></div>
+      </div>
+      <button class="icon-btn" onclick="addNewBox()">+</button>
+    </div>
+    <div class="scroll-area">
+      <div class="boxes-list" id="boxes-list"></div>
+    </div>
+  </div>
+
+  <!-- DETAIL -->
+  <div id="view-detail" style="display:none;flex-direction:column;height:100%">
+    <div class="topbar">
+      <button class="back-btn" onclick="navigate('boxes')">‹</button>
+      <div style="flex:1;min-width:0;margin:0 8px">
+        <div class="topbar-title" id="detail-title" style="white-space:normal;word-break:break-word;line-height:1.25"></div>
+        <div class="topbar-sub" id="detail-sub"></div>
+      </div>
+    </div>
+    <div class="scroll-area">
+      <div class="detail-form">
+        <div class="field-group"><label class="field-label">Nome scatola</label><input class="field-input" id="d-name" type="text" placeholder="es. Libri soggiorno"></div>
+        <div class="field-group"><label class="field-label">Contenuto</label><textarea class="field-input" id="d-desc" placeholder="Cosa c'è dentro?"></textarea></div>
+        <div class="field-group"><label class="field-label">Note</label><textarea class="field-input" id="d-notes" placeholder="Fragile, pesante, urgente..."></textarea></div>
+        <div class="field-group">
+          <label class="field-label">Stato</label>
+          <div class="status-grid">
+            <button class="status-btn" data-status="da_fare" onclick="selectStatus('da_fare')"><span class="status-emoji">⬜</span>Da imballare</button>
+            <button class="status-btn" data-status="in_corso" onclick="selectStatus('in_corso')"><span class="status-emoji">🟡</span>In corso</button>
+            <button class="status-btn" data-status="pronta" onclick="selectStatus('pronta')"><span class="status-emoji">✅</span>Pronta</button>
+            <button class="status-btn" data-status="consegnata" onclick="selectStatus('consegnata')"><span class="status-emoji">📦</span>Consegnata</button>
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">📷 Foto contenuto</label>
+          <div class="photos-grid" id="photos-grid"></div>
+          <input type="file" id="photo-input" accept="image/*" multiple style="display:none" onchange="handlePhotos(event)">
+        </div>
+        <button class="save-btn" onclick="saveDetail()">Salva scatola</button>
+        <button class="del-btn" onclick="deleteBox()">Elimina scatola</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ITEMS (quadri/arredi/complementi) -->
+  <div id="view-items" style="display:none;flex-direction:column;height:100%">
+    <div class="topbar">
+      <button class="back-btn" onclick="navigate('home')">‹</button>
+      <div style="flex:1;min-width:0;margin:0 8px">
+        <div class="topbar-title" id="items-title"></div>
+      </div>
+      <button class="icon-btn" onclick="showAddItemModal()">+</button>
+    </div>
+    <div class="scroll-area">
+      <div class="items-list" id="items-list"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL -->
+<div id="modal" class="modal-overlay" style="display:none" onclick="closeBg(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title"></div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modal-body" class="detail-form"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<input type="file" id="item-photo-input" accept="image/*" multiple style="display:none" onchange="handleItemPhotos(event)">
+
+</div><!-- #app -->
+
+<script type="module">
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getFirestore, collection, doc, getDoc, setDoc, deleteDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyB7V_xrJZiykSML3a1N7klMeKXwrFY8_eE",
+  authDomain: "trasloco-2026.firebaseapp.com",
+  projectId: "trasloco-2026",
+  storageBucket: "trasloco-2026.firebasestorage.app",
+  messagingSenderId: "550879500691",
+  appId: "1:550879500691:web:46ada9badaf6c89306f066"
+};
+
+const app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+const ICONS = ['🍳','🛏','🛋','🚿','💼','📦','🚗','🌿','🎨','🎮','👕','📚','🧸','🏋️','🖥️','🍷','🧴','🪴','🎸','🧰','🐕','🐈','🧘','🎯'];
+const PRESETS = ['#c9897a','#c9a87a','#c9c47a','#8ab87a','#6db8b0','#7a9fd4','#9b85c9','#c47aa8','#7ab8a8','#a09bd4','#b89a7a','#7ab88a'];
+const CATEGORIES = [
+  { id:'scatole', name:'Scatole', icon:'📦', color:'#5b6cf0', type:'rooms' },
+  { id:'quadri',  name:'Quadri',  icon:'🖼️', color:'#c9897a', type:'items' },
+  { id:'arredi',  name:'Arredi',  icon:'🪑', color:'#6db8b0', type:'items' },
+  { id:'complementi', name:'Complementi', icon:'🪞', color:'#c9a87a', type:'items' },
+];
+
+let S = {
+  view: 'home',
+  rooms: [], boxes: {}, items: {},
+  currentRoom: null, currentBox: null,
+  currentCategory: null, currentItemId: null,
+  currentStatus: 'da_fare',
+  editRoomId: null, modalIcon: ICONS[0], modalColor: PRESETS[0]
+};
+let unsubRooms = null;
+const unsubBoxes = {};
+
+// ── STARTUP ──
+window.addEventListener('DOMContentLoaded', async () => {
+  document.getElementById('loading').style.display = 'flex';
+  await loadItems();
+  startRealtimeRooms();
+});
+
+// ── SYNC DOT ──
+function setSyncing(v) {
+  const d = document.getElementById('sync-dot');
+  if (d) d.className = 'sync-dot' + (v ? ' syncing' : '');
+}
+
+// ── REALTIME ──
+function startRealtimeRooms() {
+  setSyncing(true);
+  unsubRooms = onSnapshot(collection(db, 'rooms'), snap => {
+    S.rooms = [];
+    snap.forEach(d => S.rooms.push({ id: d.id, ...d.data() }));
+    S.rooms.sort((a, b) => (a.order||0) - (b.order||0));
+    for (const r of S.rooms) {
+      if (!unsubBoxes[r.id]) startRealtimeBoxes(r.id);
+    }
+    setSyncing(false);
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('main-app').style.display = 'flex';
+    navigate(S.view || 'home');
+  }, err => {
+    showToast('❌ Errore connessione');
+    setSyncing(false);
+    console.error(err);
+  });
+}
+
+function startRealtimeBoxes(roomId) {
+  unsubBoxes[roomId] = onSnapshot(collection(db, 'rooms', roomId, 'boxes'), snap => {
+    S.boxes[roomId] = [];
+    snap.forEach(d => S.boxes[roomId].push({ id: d.id, ...d.data() }));
+    S.boxes[roomId].sort((a, b) => (a.order||0) - (b.order||0));
+    if (S.view === 'home') renderHome();
+    else if (S.view === 'rooms') renderRooms();
+    else if (S.view === 'boxes' && S.currentRoom === roomId) renderBoxes();
+  });
+}
+
+// ── NAVIGATE ──
+window.navigate = function(view) {
+  S.view = view;
+  ['view-home','view-rooms','view-boxes','view-detail','view-items'].forEach(v => {
+    const el = document.getElementById(v);
+    if (el) el.style.display = 'none';
+  });
+  if (view === 'home')   { renderHome();   document.getElementById('view-home').style.display = 'flex'; }
+  if (view === 'rooms')  { renderRooms();  document.getElementById('view-rooms').style.display = 'flex'; }
+  if (view === 'boxes')  { renderBoxes();  document.getElementById('view-boxes').style.display = 'flex'; }
+  if (view === 'detail') { renderDetail(); document.getElementById('view-detail').style.display = 'flex'; }
+  if (view === 'items')  { renderItems();  document.getElementById('view-items').style.display = 'flex'; }
+};
+
+// ── SHARE ──
+window.generateShareLink = function() {
+  const link = window.location.origin + window.location.pathname;
+  navigator.clipboard.writeText(link)
+    .then(() => showToast('🔗 Link copiato!'))
+    .catch(() => prompt('Copia e manda a Bianca:', link));
+};
+
+// ── HOME ──
+function renderHome() {
+  const allBoxes = Object.values(S.boxes).flat();
+  const pronte = allBoxes.filter(b => b.status === 'pronta' || b.status === 'consegnata').length;
+  const strip = document.getElementById('home-strip');
+  const catList = document.getElementById('cat-list');
+  if (!strip || !catList) return;
+  strip.innerHTML = `
+    <div class="home-chip"><div class="home-chip-num">${allBoxes.length}</div><div class="home-chip-label">Scatole</div></div>
+    <div class="home-chip"><div class="home-chip-num">${(S.items['quadri']||[]).length}</div><div class="home-chip-label">Quadri</div></div>
+    <div class="home-chip"><div class="home-chip-num">${(S.items['arredi']||[]).length}</div><div class="home-chip-label">Arredi</div></div>
+    <div class="home-chip"><div class="home-chip-num">${(S.items['complementi']||[]).length}</div><div class="home-chip-label">Compl.</div></div>`;
+  catList.innerHTML = '';
+  CATEGORIES.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-card';
+    let meta, prog = '';
+    if (cat.type === 'rooms') {
+      meta = `${allBoxes.length} scatole · ${pronte} pronte`;
+      const pct = allBoxes.length ? Math.round(pronte / allBoxes.length * 100) : 0;
+      prog = `<div class="cat-prog"><div class="cat-progf" style="width:${pct}%;background:${cat.color}"></div></div>`;
+    } else {
+      const n = (S.items[cat.id]||[]).length;
+      meta = n ? `${n} element${n===1?'o':'i'} catalogat${n===1?'o':'i'}` : 'Nessun elemento';
+    }
+    btn.innerHTML = `
+      <div class="cat-icon" style="background:${cat.color}22">${cat.icon}</div>
+      <div class="cat-body"><div class="cat-name">${cat.name}</div><div class="cat-meta">${meta}</div>${prog}</div>
+      <div class="cat-chev">›</div>`;
+    btn.onclick = () => {
+      if (cat.type === 'rooms') navigate('rooms');
+      else { S.currentCategory = cat.id; navigate('items'); }
+    };
+    catList.appendChild(btn);
+  });
+}
+
+// ── ROOMS ──
+function renderRooms() {
+  const allBoxes = Object.values(S.boxes).flat();
+  const pronte = allBoxes.filter(b => b.status === 'pronta' || b.status === 'consegnata').length;
+  document.getElementById('summary-strip').innerHTML = `
+    <div class="chip"><div class="chip-num">${S.rooms.length}</div><div class="chip-label">Stanze</div></div>
+    <div class="chip"><div class="chip-num">${allBoxes.length}</div><div class="chip-label">Scatole</div></div>
+    <div class="chip"><div class="chip-num">${pronte}</div><div class="chip-label">Pronte</div></div>`;
+  const list = document.getElementById('rooms-list');
+  list.innerHTML = '';
+  if (S.rooms.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">📦</div><div class="empty-title">Nessuna stanza</div><div class="empty-sub">Aggiungi la prima stanza<br>per iniziare</div><button class="save-btn" style="margin-top:8px;width:auto;padding:12px 28px" onclick="showRoomModal()">+ Aggiungi stanza</button></div>`;
+    return;
+  }
+  S.rooms.forEach(room => {
+    const boxes = S.boxes[room.id]||[];
+    const done = boxes.filter(b => b.status === 'pronta' || b.status === 'consegnata').length;
+    const pct = boxes.length ? Math.round(done / boxes.length * 100) : 0;
+    const color = room.color || '#9b85c9';
+    const btn = document.createElement('button');
+    btn.className = 'room-row';
+    btn.innerHTML = `
+      <div class="room-circle" style="background:${color}">${room.icon}</div>
+      <div class="room-info">
+        <div class="room-name">${room.name}</div>
+        <div class="room-meta">${boxes.length} scatol${boxes.length===1?'a':'e'}${boxes.length?' · '+done+' pronte':''}</div>
+        ${boxes.length ? `<div class="room-prog"><div class="room-progf" style="width:${pct}%;background:${color}"></div></div>` : ''}
+      </div>
+      <button class="room-edit" onclick="event.stopPropagation();editRoom('${room.id}')">✏️</button>
+      <div class="room-chevron">›</div>`;
+    btn.onclick = () => openRoom(room.id);
+    list.appendChild(btn);
+  });
+  const add = document.createElement('button');
+  add.className = 'add-room-btn';
+  add.innerHTML = '+ Aggiungi stanza';
+  add.onclick = showRoomModal;
+  list.appendChild(add);
+}
+
+async function openRoom(id) {
+  S.currentRoom = id;
+  if (!unsubBoxes[id]) startRealtimeBoxes(id);
+  navigate('boxes');
+}
+window.openRoom = openRoom;
+
+// ── BOXES ──
+function renderBoxes() {
+  const room = S.rooms.find(r => r.id === S.currentRoom);
+  if (!room) return;
+  document.getElementById('boxes-title').textContent = `${room.icon} ${room.name}`;
+  const boxes = S.boxes[S.currentRoom]||[];
+  const list = document.getElementById('boxes-list');
+  list.innerHTML = '';
+  const color = room.color || '#9b85c9';
+  const statusLabel = { da_fare:'Da imballare', in_corso:'In corso', pronta:'Pronta', consegnata:'Consegnata' };
+  const statusColor = { da_fare:'#d1d5db', in_corso:'#f59e0b', pronta:'#10b981', consegnata:'#5b6cf0' };
+  boxes.forEach((box, i) => {
+    const btn = document.createElement('button');
+    btn.className = `box-row s-${box.status||'da_fare'}`;
+    const desc = box.desc ? (box.desc.length > 30 ? box.desc.slice(0,30)+'…' : box.desc) : 'Nessuna descrizione';
+    btn.innerHTML = `
+      <div class="box-num" style="background:${color}22;color:${color}">#${i+1}</div>
+      <div class="box-body">
+        <div class="box-name">${box.name||'Scatola senza nome'}</div>
+        <div class="box-desc">${desc}</div>
+        <div class="box-tags">
+          <span class="tag" style="background:${statusColor[box.status||'da_fare']}22;color:${statusColor[box.status||'da_fare']}">${statusLabel[box.status||'da_fare']}</span>
+          ${(box.photos||[]).length ? `<span class="tag" style="background:#5b6cf022;color:#5b6cf0">📷 ${box.photos.length}</span>` : ''}
+        </div>
+      </div>
+      <div class="box-chevron">›</div>`;
+    btn.onclick = () => openBox(box.id);
+    list.appendChild(btn);
+  });
+  const addBtn = document.createElement('button');
+  addBtn.className = 'add-box-btn';
+  addBtn.innerHTML = '+ Aggiungi scatola';
+  addBtn.onclick = addNewBox;
+  list.appendChild(addBtn);
+}
+
+async function openBox(id) { S.currentBox = id; navigate('detail'); }
+window.openBox = openBox;
+
+window.addNewBox = async function() {
+  const roomId = S.currentRoom;
+  const boxes = S.boxes[roomId]||[];
+  const nb = { name:'', desc:'', notes:'', status:'da_fare', photos:[], photoPaths:[], order:boxes.length, createdAt:new Date().toISOString() };
+  const r2 = doc(collection(db, 'rooms', roomId, 'boxes'));
+  await setDoc(r2, nb);
+  S.currentBox = r2.id;
+  navigate('detail');
+};
+
+// ── DETAIL ──
+function renderDetail() {
+  const boxes = S.boxes[S.currentRoom]||[];
+  const box = boxes.find(b => b.id === S.currentBox);
+  if (!box) return;
+  const idx = boxes.indexOf(box);
+  const room = S.rooms.find(r => r.id === S.currentRoom);
+  document.getElementById('detail-title').textContent = `Scatola #${idx+1}`;
+  document.getElementById('detail-sub').textContent = `${room.icon} ${room.name}`;
+  document.getElementById('d-name').value = box.name||'';
+  document.getElementById('d-desc').value = box.desc||'';
+  document.getElementById('d-notes').value = box.notes||'';
+  S.currentStatus = box.status||'da_fare';
+  selectStatus(S.currentStatus);
+  renderPhotosGrid(box.photos||[]);
+}
+
+window.selectStatus = function(s) {
+  S.currentStatus = s;
+  document.querySelectorAll('.status-btn').forEach(b => b.classList.toggle('active', b.dataset.status === s));
+};
+
+function renderPhotosGrid(photos) {
+  const grid = document.getElementById('photos-grid');
+  grid.innerHTML = '';
+  photos.forEach((url, i) => {
+    const w = document.createElement('div');
+    w.className = 'photo-wrap';
+    w.innerHTML = `<img class="photo-img" src="${url}" loading="lazy"><button class="photo-del" onclick="deletePhoto(${i})">×</button>`;
+    grid.appendChild(w);
+  });
+  const add = document.createElement('button');
+  add.className = 'photo-add-btn';
+  add.innerHTML = `<span style="font-size:22px">📷</span><span>Aggiungi</span>`;
+  add.onclick = () => document.getElementById('photo-input').click();
+  grid.appendChild(add);
+}
+
+window.handlePhotos = async function(e) {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+  showToast('⏫ Caricamento...');
+  setSyncing(true);
+  const roomId = S.currentRoom, boxId = S.currentBox;
+  const box = (S.boxes[roomId]||[]).find(b => b.id === boxId);
+  const photos = [...(box.photos||[])];
+  const photoPaths = [...(box.photoPaths||[])];
+  for (const file of files) {
+    try {
+      const compressed = await compressImage(file, 1200, 0.82);
+      const path = `photos/${roomId}/${boxId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g,'_')}`;
+      const sRef = ref(storage, path);
+      await uploadBytes(sRef, compressed, { contentType:'image/jpeg' });
+      photos.push(await getDownloadURL(sRef));
+      photoPaths.push(path);
+    } catch(err) { showToast('❌ ' + err.message); }
+  }
+  box.photos = photos; box.photoPaths = photoPaths;
+  await setDoc(doc(db, 'rooms', roomId, 'boxes', boxId), box);
+  renderPhotosGrid(photos);
+  showToast(`✅ ${files.length} foto caricate`);
+  setSyncing(false);
+  e.target.value = '';
+};
+
+async function compressImage(file, maxSize, quality) {
+  return new Promise((resolve, reject) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let w = img.width, h = img.height;
+      if (w > maxSize || h > maxSize) {
+        if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
+        else { w = Math.round(w * maxSize / h); h = maxSize; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('fail')), 'image/jpeg', quality);
+    };
+    img.onerror = reject; img.src = url;
+  });
+}
+
+window.deletePhoto = async function(idx) {
+  if (!confirm('Rimuovere foto?')) return;
+  const roomId = S.currentRoom, boxId = S.currentBox;
+  const box = (S.boxes[roomId]||[]).find(b => b.id === boxId);
+  const paths = [...(box.photoPaths||[])];
+  if (paths[idx]) {
+    try { await deleteObject(ref(storage, paths[idx])); } catch(e) {}
+    paths.splice(idx, 1);
+  }
+  box.photos.splice(idx, 1);
+  box.photoPaths = paths;
+  await setDoc(doc(db, 'rooms', roomId, 'boxes', boxId), box);
+  renderPhotosGrid(box.photos);
+  showToast('🗑️ Foto rimossa');
+};
+
+window.saveDetail = async function() {
+  const roomId = S.currentRoom, boxId = S.currentBox;
+  const box = (S.boxes[roomId]||[]).find(b => b.id === boxId);
+  box.name = document.getElementById('d-name').value;
+  box.desc = document.getElementById('d-desc').value;
+  box.notes = document.getElementById('d-notes').value;
+  box.status = S.currentStatus;
+  box.updatedAt = new Date().toISOString();
+  await setDoc(doc(db, 'rooms', roomId, 'boxes', boxId), box);
+  showToast('✅ Salvato!');
+  setTimeout(() => navigate('boxes'), 500);
+};
+
+window.deleteBox = async function() {
+  if (!confirm('Eliminare scatola?')) return;
+  const roomId = S.currentRoom, boxId = S.currentBox;
+  const box = (S.boxes[roomId]||[]).find(b => b.id === boxId);
+  for (const path of (box.photoPaths||[])) {
+    try { await deleteObject(ref(storage, path)); } catch(e) {}
+  }
+  await deleteDoc(doc(db, 'rooms', roomId, 'boxes', boxId));
+  navigate('boxes');
+  showToast('🗑️ Scatola eliminata');
+};
+
+// ── ITEMS ──
+async function loadItems() {
+  for (const cat of CATEGORIES.filter(c => c.type === 'items')) {
+    try {
+      const snap = await getDoc(doc(db, 'items', cat.id));
+      S.items[cat.id] = snap.exists() ? (snap.data().items||[]) : [];
+    } catch(e) { S.items[cat.id] = []; }
+  }
+}
+
+async function saveItems(catId) {
+  await setDoc(doc(db, 'items', catId), { items: S.items[catId] });
+}
+
+function renderItems() {
+  const cat = CATEGORIES.find(c => c.id === S.currentCategory);
+  if (!cat) return;
+  document.getElementById('items-title').textContent = `${cat.icon} ${cat.name}`;
+  const items = S.items[cat.id]||[];
+  const list = document.getElementById('items-list');
+  list.innerHTML = '';
+  if (items.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">${cat.icon}</div><div class="empty-title">Nessun elemento</div><div class="empty-sub">Aggiungi il primo elemento<br>con il tasto + in alto</div></div>`;
+  }
+  items.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'item-card';
+    const firstPhoto = (item.photos||[])[0];
+    const photoCount = (item.photos||[]).length;
+    card.innerHTML = `
+      <div class="item-card-inner">
+        <div class="item-photo">${firstPhoto ? `<img src="${firstPhoto}" loading="lazy">` : cat.icon}</div>
+        <div class="item-body">
+          <div class="item-name">${item.name||'Senza nome'}</div>
+          <div class="item-count">${photoCount} foto</div>
+        </div>
+      </div>
+      <div class="item-actions">
+        <button class="item-action-btn" style="background:transparent;border:1px solid rgba(91,108,240,0.25);color:var(--accent)" onclick="addItemPhotos('${item.id}')">📷 Foto</button>
+        <button class="item-action-btn" style="background:transparent;border:1px solid rgba(239,68,68,0.25);color:#ef4444" onclick="deleteItem('${item.id}')">🗑️ Elimina</button>
+      </div>`;
+    list.appendChild(card);
+  });
+  const addBtn = document.createElement('button');
+  addBtn.className = 'add-item-btn';
+  addBtn.innerHTML = `+ Aggiungi ${cat.name.toLowerCase().slice(0,-1)}`;
+  addBtn.onclick = showAddItemModal;
+  list.appendChild(addBtn);
+}
+
+window.showAddItemModal = function() {
+  document.getElementById('modal-title').textContent = 'Nuovo elemento';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="field-group"><label class="field-label">Nome</label><input class="field-input" id="item-name" type="text" placeholder="es. Quadro astratto grande..."></div>
+    <button class="save-btn" onclick="confirmAddItem()">Aggiungi</button>`;
+  document.getElementById('modal').style.display = 'flex';
+};
+
+window.confirmAddItem = async function() {
+  const name = document.getElementById('item-name').value.trim();
+  if (!name) { showToast('⚠️ Inserisci un nome'); return; }
+  const catId = S.currentCategory;
+  if (!S.items[catId]) S.items[catId] = [];
+  S.items[catId].push({ id: Date.now().toString(), name, photos:[], photoPaths:[], createdAt:new Date().toISOString() });
+  await saveItems(catId);
+  closeModal();
+  renderItems();
+  renderHome();
+  showToast('✅ Aggiunto!');
+};
+
+window.deleteItem = async function(itemId) {
+  if (!confirm('Eliminare elemento?')) return;
+  const catId = S.currentCategory;
+  const item = (S.items[catId]||[]).find(i => i.id === itemId);
+  for (const path of (item?.photoPaths||[])) {
+    try { await deleteObject(ref(storage, path)); } catch(e) {}
+  }
+  S.items[catId] = S.items[catId].filter(i => i.id !== itemId);
+  await saveItems(catId);
+  renderItems();
+  renderHome();
+  showToast('🗑️ Eliminato');
+};
+
+window.addItemPhotos = function(itemId) {
+  S.currentItemId = itemId;
+  document.getElementById('item-photo-input').click();
+};
+
+window.handleItemPhotos = async function(e) {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+  showToast('⏫ Caricamento...');
+  const catId = S.currentCategory, itemId = S.currentItemId;
+  const item = (S.items[catId]||[]).find(i => i.id === itemId);
+  if (!item) return;
+  for (const file of files) {
+    try {
+      const compressed = await compressImage(file, 1200, 0.82);
+      const path = `items/${catId}/${itemId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g,'_')}`;
+      const sRef = ref(storage, path);
+      await uploadBytes(sRef, compressed, { contentType:'image/jpeg' });
+      item.photos.push(await getDownloadURL(sRef));
+      item.photoPaths.push(path);
+    } catch(err) { showToast('❌ ' + err.message); }
+  }
+  await saveItems(catId);
+  renderItems();
+  showToast('✅ Foto aggiunte!');
+  e.target.value = '';
+};
+
+// ── ROOM MODAL ──
+function buildModal(room=null) {
+  S.modalIcon = room?.icon||ICONS[0];
+  S.modalColor = room?.color||PRESETS[0];
+  S.editRoomId = room?.id||null;
+  document.getElementById('modal-title').textContent = room ? 'Modifica stanza' : 'Nuova stanza';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="field-group"><label class="field-label">Nome</label><input class="field-input" id="m-name" type="text" value="${room?.name||''}" placeholder="es. Cucina, Garage..."></div>
+    <div class="field-group"><label class="field-label">Icona</label><div class="icon-grid" id="icon-grid"></div></div>
+    <div class="field-group">
+      <label class="field-label">Colore</label>
+      <div class="color-presets" id="color-presets"></div>
+      <div class="color-custom-row">
+        <span class="color-custom-label">Personalizzato:</span>
+        <input type="color" id="color-custom" value="${S.modalColor}" onchange="setCustomColor(this.value)">
+        <div id="color-preview" style="width:34px;height:34px;border-radius:50%;background:${S.modalColor};border:2px solid rgba(0,0,0,0.1)"></div>
+      </div>
+    </div>
+    <button class="save-btn" onclick="confirmRoom()">${room?'Salva modifiche':'Aggiungi stanza'}</button>
+    ${room ? `<button class="del-btn" style="margin-top:8px" onclick="deleteRoom('${room.id}')">Elimina stanza</button>` : ''}`;
+  renderIconGrid();
+  renderColorPresets();
+}
+
+function renderIconGrid() {
+  const g = document.getElementById('icon-grid');
+  g.innerHTML = '';
+  ICONS.forEach(icon => {
+    const btn = document.createElement('button');
+    btn.className = 'icon-opt' + (icon === S.modalIcon ? ' selected' : '');
+    btn.textContent = icon;
+    btn.onclick = () => {
+      S.modalIcon = icon;
+      document.querySelectorAll('.icon-opt').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    };
+    g.appendChild(btn);
+  });
+}
+
+function renderColorPresets() {
+  const w = document.getElementById('color-presets');
+  w.innerHTML = '';
+  PRESETS.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'color-preset' + (c === S.modalColor ? ' selected' : '');
+    el.style.background = c;
+    el.onclick = () => {
+      S.modalColor = c;
+      document.getElementById('color-custom').value = c;
+      document.getElementById('color-preview').style.background = c;
+      document.querySelectorAll('.color-preset').forEach(p => p.classList.remove('selected'));
+      el.classList.add('selected');
+    };
+    w.appendChild(el);
+  });
+}
+
+window.setCustomColor = function(c) {
+  S.modalColor = c;
+  document.getElementById('color-preview').style.background = c;
+  document.querySelectorAll('.color-preset').forEach(p => p.classList.remove('selected'));
+};
+window.showRoomModal = function() { buildModal(); document.getElementById('modal').style.display = 'flex'; };
+window.editRoom = function(id) { buildModal(S.rooms.find(r => r.id === id)); document.getElementById('modal').style.display = 'flex'; };
+window.closeModal = function() { document.getElementById('modal').style.display = 'none'; };
+window.closeBg = function(e) { if (e.target === document.getElementById('modal')) closeModal(); };
+
+window.confirmRoom = async function() {
+  const name = document.getElementById('m-name').value.trim();
+  if (!name) { showToast('⚠️ Inserisci un nome'); return; }
+  const data = { name, icon: S.modalIcon, color: S.modalColor };
+  if (S.editRoomId) {
+    const room = S.rooms.find(r => r.id === S.editRoomId);
+    Object.assign(room, data);
+    await setDoc(doc(db, 'rooms', S.editRoomId), { ...room });
+    showToast('✅ Stanza aggiornata!');
+  } else {
+    data.order = S.rooms.length;
+    const r2 = doc(collection(db, 'rooms'));
+    await setDoc(r2, data);
+    showToast(`✅ ${name} aggiunta!`);
+  }
+  closeModal();
+};
+
+window.deleteRoom = async function(id) {
+  if (!confirm('Eliminare stanza e tutte le scatole?')) return;
+  const boxes = S.boxes[id]||[];
+  for (const box of boxes) {
+    for (const path of (box.photoPaths||[])) {
+      try { await deleteObject(ref(storage, path)); } catch(e) {}
+    }
+    await deleteDoc(doc(db, 'rooms', id, 'boxes', box.id));
+  }
+  await deleteDoc(doc(db, 'rooms', id));
+  if (unsubBoxes[id]) { unsubBoxes[id](); delete unsubBoxes[id]; }
+  closeModal();
+  showToast('🗑️ Stanza eliminata');
+};
+
+// ── TOAST ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+window.showToast = showToast;
+</script>
+</body>
+</html>
